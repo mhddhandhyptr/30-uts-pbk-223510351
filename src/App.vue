@@ -1,116 +1,145 @@
-<script setup>
-import { ref, watch } from 'vue'
-let filter = ref('all')
-let todos = ref(JSON.parse(window.localStorage.getItem('todos')) ?? [])
-let newTodo = ref('')
-let input = ref('')
-
-function addTodo() {
-  todos.value.push({
-    text: newTodo.value,
-    complete: false
-  })
-  newTodo.value = ''
-}
-
-function deleteTodo(index) {
-  todos.value.splice(index, 1)
-}
-
-watch(todos, function (value) {
-  window.localStorage.setItem('todos', JSON.stringify(value))
-}, { deep: true })
-
-function todoFilter(todo) {
-  if (filter.value == 'Belum dikerjain') {
-    return todo.complete == false
-  } else if (filter.value == 'Sudah Selesai'){
-    return todo.complete == true
-  } else {
-    return true
-  }
-}
-function activeFilter (todo) {
-  return todo.complete == false
-}
-</script>
-
 <template>
-  <div class="latar">
-  <h1>Catatan Harian</h1>
-  <p v-if="todos.length > 0">
-  </p>
-  <p> {{ todos.filter(activeFilter).length}} items left</p>
-  <p>
-  <input name="filter" type="radio" value="all" v-model="filter">
-  <label>Semua</label>
-  <input name="filter" type="radio" value="active" v-model="filter">
-  <label>Belum dikerjain</label>
-  <input name="filter" type="radio" value="complete" v-model="filter">
-  <label>Susah Selesai</label>
-  </p>
-  <input v-model="newTodo" @keydown.enter="addTodo">
-  <button @click="addTodo">Tambahkan</button>
-  <div v-for="(todo, index) in todos.filter(todoFilter)" :class="{ completed: todo.complete }">
-    <input type="checkbox" v-model="todo.complete">
-    <button @click="deleteTodo">💀</button>
-
-    {{ index }}
-    {{ todo.text }}
- 
-</div>
-</div>
-<br>  
-<div>
-      <footer>
-    <p>Copyright &copy;MUHAMMAD DHANDHY PUTERA IRVANTIE</p>
-  </footer>
-    </div>  
+  <div>
+    <h1>Catatan Tugas</h1>
+    <form>
+      <label for="activity">Tugas:</label>
+      <input type="text" id="activity" v-model="newActivity"><br><br>
+      <button type="button" @click="addActivity">Tambah</button>
+      <button type="button" @click="filterUnfinished">Filter Halaman</button>
+    </form>
+    <ul>
+      <li v-for="(activity, index) in activities" :key="index" :style="{textDecoration: activity.completed ? 'line-through' : 'none'}">
+        {{ activity.name }}
+        <button @click="removeActivity(index)">Hapus</button>
+        <button @click="completeActivity(index)" v-if="!activity.completed">Selesai</button>
+      </li>
+    </ul>
+  </div>
 </template>
 
+<script>
+export default {
+  data() {
+    return {
+      activities: [],
+      newActivity: "",
+    };
+  },
+  methods: {
+    addActivity() {
+      if (this.newActivity !== "") {
+        this.activities.push({ name: this.newActivity, completed: false });
+        this.newActivity = "";
+      }
+    },
+    removeActivity(index) {
+      this.activities.splice(index, 1);
+    },
+    completeActivity(index) {
+      this.activities[index].completed = true;
+    },
+    filterUnfinished() {
+      this.activities = this.activities.filter(function (activity) {
+        return !activity.completed;
+      });
+    },
+  },
+};
+</script>
 
 <style>
-
 body {
-  background: url('/src/Background.jpg') no-repeat center center fixed;
+  background: url('/src/bground.jpeg') no-repeat center center fixed;
   background-size: cover;
 
-  font-family: Arial, Helvetica, sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+h1 {
+  color: black;
+  margin-top: 50px;
   text-align: center;
-  color: white;
 }
 
-
-.complete {
-  text-decoration: line-through;
-  color: #c2c2cc;
-}
-input[type="checkbox"]::before {
-  /* ...existing styles */
-
-  transform-origin: bottom left;
-  clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
-  border-radius: 30px;
-  padding: 35px, 30px;
+form {
   margin: 20px;
-
-    background-color: rgb(239, 137, 96);
-    border-radius: 15px;
-    color:whitesmoke;
-    padding: 8px 12px 10px 18px;
-    /* border: 2px red solid; */
-    border-width: 0 0 5px 0;
-    border-color:indianred
-
-}
-footer {
   text-align: center;
-  background-color: burlywood; /* Warna latar belakang kuning */
-  padding: 20px 0; /* Padding atas dan bawah */
-  font-size: 1.2rem; /* Ukuran font */
-  color: whitesmoke; /* Warna teks */
-  box-shadow: 0 -4px 8px rgba(0, 0, 0, 0.1); /* Bayangan untuk efek kedalaman */
-  margin-bottom: 10px;
 }
+
+label {
+  display: inline-block;
+  margin-right: 10px;
+  text-align: right;
+  width: 80px;
+}
+
+input[type="text"] {
+  border: 2px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+  font-size: 16px;
+  margin: 5px 0;
+  padding: 10px;
+  width: 200px;
+}
+
+button {
+  background-color: blue;
+  border: none;
+  border-radius: 4px;
+  color: white;
+  cursor: pointer;
+  font-size: 16px;
+  margin: 5px;
+  padding: 10px;
+}
+
+button:hover {
+  background-color: #3e8e41;
+}
+
+ul {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+
+li {
+  background-color: saddlebrown;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  margin-bottom: 5px;
+  padding: 10px;
+}
+
+li button {
+  background-color: #f44336;
+  border: none;
+  border-radius: 4px;
+  color: white;
+  cursor: pointer;
+  float: right;
+  font-size: 14px;
+  margin-left: 5px;
+  padding: 5px;
+}
+
+li button:last-child {
+  background-color: #4CAF50;
+}
+
+li button:hover {
+  background-color: #e60000;
+}
+
+li button:last-child:hover {
+  background-color: #3e8e41;
+}
+
+li.completed {
+  text-decoration: line-through;
+}
+
 
 </style>
