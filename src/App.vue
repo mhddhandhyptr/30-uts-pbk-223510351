@@ -4,8 +4,8 @@
     <header>
       <nav>
         <ul>
-          <li @click="showTodos">Todos</li>
-          <li @click="showPosts">Posts</li>
+          <li @click="activeMenu = 'todos'" :class="{ active: activeMenu === 'todos' }">Todos</li>
+          <li @click="activeMenu = 'posts'" :class="{ active: activeMenu === 'posts' }">Posts</li>
         </ul>
       </nav>
     </header>
@@ -13,116 +13,118 @@
     <!-- Main Content -->
     <main>
       <div v-if="activeMenu === 'todos'">
-        <!-- Fitur Todos -->
-        <h2>Todos</h2>
-        <form>
-          <label for="activity">Tugas:</label>
-          <input type="text" id="activity" v-model="newActivity"><br><br>
-          <button type="button" @click="addActivity">Tambah</button>
-          <button type="button" @click="filterUnfinished">Filter Halaman</button>
-        </form>
-        <ul>
-          <li v-for="(activity, index) in activities" :key="index" :style="{textDecoration: activity.completed ? 'line-through' : 'none'}">
-            {{ activity.name }}
-            <button @click="removeActivity(index)">Hapus</button>
-            <button @click="completeActivity(index)" v-if="!activity.completed">Selesai</button>
-          </li>
-        </ul>
+        <TodoList :initialActivities="activities" />
       </div>
       <div v-else-if="activeMenu === 'posts'">
-        <!-- Fitur Postingan -->
-        <h2>Postingan</h2>
-        <select v-model="selectedUser">
-          <option v-for="user in users" :key="user.id" :value="user.id">{{ user.name }}</option>
-        </select>
-        <div v-if="selectedUser">
-          <div v-for="post in filteredPosts" :key="post.id">
-            <h3>{{ post.title }}</h3>
-            <p>{{ post.body }}</p>
-          </div>
-        </div>
-        <div v-else>
-          <p>Silakan pilih pengguna untuk melihat postingan mereka.</p>
-        </div>
+        <Posts :users="users" :posts="posts" />
       </div>
     </main>
   </div>
 </template>
 
 <script>
+import TodoList from './Component/TodoList.vue'
+import Posts from './Component/Posts.vue'
+
 export default {
   name: 'App',
+  components: {
+    TodoList,
+    Posts
+  },
   data() {
     return {
       activeMenu: 'todos',
       activities: [],
-      newActivity: "",
       users: [],
       posts: [],
-      selectedUser: null
     };
   },
-  methods: {
-    showTodos() {
-      this.activeMenu = 'todos';
-    },
-    showPosts() {
-      this.activeMenu = 'posts';
-    },
-    addActivity() {
-      if (this.newActivity !== "") {
-        this.activities.push({ name: this.newActivity, completed: false });
-        this.newActivity = "";
-      }
-    },
-    removeActivity(index) {
-      this.activities.splice(index, 1);
-    },
-    completeActivity(index) {
-      this.activities[index].completed = true;
-    },
-    filterUnfinished() {
-      this.activities = this.activities.filter(function (activity) {
-        return !activity.completed;
-      });
-    },
-  },
   mounted() {
-    // Ambil data user dari API
+    // Fetch users data
     fetch('https://jsonplaceholder.typicode.com/users')
       .then(response => response.json())
       .then(data => {
         this.users = data;
       });
 
-    // Ambil data postingan dari API
+    // Fetch posts data
     fetch('https://jsonplaceholder.typicode.com/posts')
       .then(response => response.json())
       .then(data => {
         this.posts = data;
       });
-  },
-  computed: {
-    filteredPosts() {
-      // Filter postingan berdasarkan user yang dipilih
-      return this.posts.filter(post => post.userId === parseInt(this.selectedUser));
-    }
   }
 };
 </script>
 
 <style scoped>
-body {
+#app {
   background: url('/src/bground.jpeg') no-repeat center center fixed;
   background-size: cover;
   margin: 0;
   padding: 0;
+  font-family: 'Roboto', sans-serif;
+  position: fixed;
+  top: 0;
+  left: 0;
+  min-height: 90%;
+  min-width: 1500px;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  z-index: -2;
+  object-fit: cover;
+  -webkit-background-size:cover; -moz-background-size:cover; -o-background-size:cover; background-size: cover;
+  filter: brightness(0.8);
+
 }
 
-h1, h2 {
+
+header {
+  background: rgba(0, 0, 0, 0.8);
+  padding: 10px 0;
+}
+
+nav ul {
+  list-style: none;
+  display: flex;
+  justify-content: center;
+  padding: 0;
+  margin: 0;
+}
+
+nav ul li {
+  margin: 0 15px;
+  padding: 10px;
+  cursor: pointer;
+  color: chocolate;
+  font-size: 18px;
+  transition: color 0.3s ease;
+}
+
+nav ul li:hover {
+  color: burlywood;
+}
+
+nav ul li.active {
+  border-bottom: 2px solid #FFD700;
+}
+
+main {
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 10px;
+  margin: 20px auto;
+  max-width: 800px;
+  box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.1);
+}
+
+h2 {
   color: black;
-  margin-top: 50px;
   text-align: center;
+  margin-top: 50px;
+  font-weight: 600;
 }
 
 form {
@@ -135,6 +137,7 @@ label {
   margin-right: 10px;
   text-align: right;
   width: 80px;
+  font-weight: 600;
 }
 
 input[type="text"] {
@@ -148,7 +151,7 @@ input[type="text"] {
 }
 
 button {
-  background-color: blue;
+  background-color: #4CAF50;
   border: none;
   border-radius: 4px;
   color: white;
@@ -156,10 +159,12 @@ button {
   font-size: 16px;
   margin: 5px;
   padding: 10px;
+  transition: background-color 0.3s ease;
+  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
 }
 
 button:hover {
-  background-color: #3e8e41;
+  background-color: #45a049;
 }
 
 ul {
@@ -169,11 +174,17 @@ ul {
 }
 
 li {
-  background-color: saddlebrown;
-  border: 1px solid #ccc;
+  background-color: #f9f9f9;
+  border: 1px solid #ddd;
   border-radius: 4px;
   margin-bottom: 5px;
   padding: 10px;
+  transition: background-color 0.3s ease;
+  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+}
+
+li:hover {
+  background-color: #ddd;
 }
 
 li button {
@@ -186,6 +197,8 @@ li button {
   font-size: 14px;
   margin-left: 5px;
   padding: 5px;
+  transition: background-color 0.3s ease;
+  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
 }
 
 li button:last-child {
@@ -197,7 +210,7 @@ li button:hover {
 }
 
 li button:last-child:hover {
-  background-color: #3e8e41;
+  background-color: #45a049;
 }
 
 li.completed {
